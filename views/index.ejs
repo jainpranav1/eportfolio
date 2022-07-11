@@ -69,6 +69,8 @@
       })
       .nodeThreeObjectExtend(true)
 
+
+    let timeout;
     function move_to_node(node) {
       // Aim at node from outside it
       const distance = 10;
@@ -89,7 +91,7 @@
       3000 // ms transition duration
       );
 
-      setTimeout(() => {
+      timeout = setTimeout(() => {
       let cssObj = node.__threeObj.children[0];
       cssObj.visible = true;
       }, "3000");
@@ -112,6 +114,8 @@
             return;
           }
 
+          clearTimeout(timeout);
+
           currNodeInd = (currNodeInd - 1);
 
           move_to_node(nodes[currNodeInd]);
@@ -123,9 +127,12 @@
         }
         // right arrow
         else if (e.keyCode == '39') {
+
           if (currNodeInd == graphData.nodes.length - 1) {
             return;
           }
+
+          clearTimeout(timeout);
 
           currNodeInd = currNodeInd + 1;
 
