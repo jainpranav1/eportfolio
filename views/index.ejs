@@ -21,11 +21,14 @@
     })(document.getElementById("3d-graph"))
       .graphData(<%- JSON.stringify(gData) %>)
       .nodeAutoColorBy('group')
+      .enableNodeDrag(false)
       .nodeLabel(node => `${node.hover}`)
       .nodeThreeObject((node) => {
         const nodeEl = document.createElement("div");
         nodeEl.innerHTML = node.html;
-        return new THREE.CSS2DObject(nodeEl);
+        let cssObj = new THREE.CSS2DObject(nodeEl);
+        cssObj.visible = false;
+        return cssObj;
       })
       .nodeThreeObjectExtend(true)
       .onNodeClick((node) => {
@@ -47,6 +50,14 @@
           node, // lookAt ({ x, y, z })
           3000 // ms transition duration
         );
+
+        setTimeout(() => {
+          let cssObj = node.__threeObj.children[0];
+          cssObj.visible = true;
+        }, "3000")
       });
+
+      Graph.controls().noZoom = true;
+      Graph.controls().noPan = true;
   </script>
 </body>
