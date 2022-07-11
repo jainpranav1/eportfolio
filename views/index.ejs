@@ -1,0 +1,52 @@
+<head>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+
+  <script src="//unpkg.com/three"></script>
+  <script src="//unpkg.com/three/examples/js/renderers/CSS2DRenderer.js"></script>
+  <script src="//unpkg.com/3d-force-graph"></script>
+
+  <style></style>
+</head>
+
+<body>
+  <div id="3d-graph"></div>
+
+  <script>
+    const Graph = ForceGraph3D({
+      extraRenderers: [new THREE.CSS2DRenderer()],
+    })(document.getElementById("3d-graph"))
+      .graphData(<%- JSON.stringify(gData) %>)
+      .nodeAutoColorBy('group')
+      .nodeLabel(node => `${node.hover}`)
+      .nodeThreeObject((node) => {
+        const nodeEl = document.createElement("div");
+        nodeEl.innerHTML = node.html;
+        return new THREE.CSS2DObject(nodeEl);
+      })
+      .nodeThreeObjectExtend(true)
+      .onNodeClick((node) => {
+        // Aim at node from outside it
+        const distance = 10;
+        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+        const newPos =
+          node.x || node.y || node.z
+            ? {
+                x: node.x * distRatio,
+                y: node.y * distRatio,
+                z: node.z * distRatio,
+              }
+            : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+        Graph.cameraPosition(
+          newPos, // new position
+          node, // lookAt ({ x, y, z })
+          3000 // ms transition duration
+        );
+      });
+  </script>
+</body>
