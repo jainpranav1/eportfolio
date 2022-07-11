@@ -16,13 +16,19 @@
   <div id="3d-graph"></div>
 
   <script>
+
+    // store graph data
+    let graphData = <%- JSON.stringify(gData) %>;
+
+    // create graph
     const Graph = ForceGraph3D({
       extraRenderers: [new THREE.CSS2DRenderer()],
     })(document.getElementById("3d-graph"))
-      .graphData(<%- JSON.stringify(gData) %>)
+      .graphData(graphData)
       .nodeAutoColorBy('group')
       .enableNodeDrag(false)
-      .nodeLabel(node => `${node.hover}`)
+      .enableNavigationControls(false)
+      .showNavInfo(false)
       .nodeThreeObject((node) => {
         const nodeEl = document.createElement("div");
         nodeEl.innerHTML = node.html;
@@ -31,33 +37,74 @@
         return cssObj;
       })
       .nodeThreeObjectExtend(true)
-      .onNodeClick((node) => {
-        // Aim at node from outside it
-        const distance = 10;
-        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
-        const newPos =
-          node.x || node.y || node.z
-            ? {
-                x: node.x * distRatio,
-                y: node.y * distRatio,
-                z: node.z * distRatio,
-              }
-            : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+    function move_to_node(node) {
+      // Aim at node from outside it
+      const distance = 10;
+      const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
-        Graph.cameraPosition(
-          newPos, // new position
-          node, // lookAt ({ x, y, z })
-          3000 // ms transition duration
-        );
+      const newPos =
+      node.x || node.y || node.z
+        ? {
+            x: node.x * distRatio,
+            y: node.y * distRatio,
+            z: node.z * distRatio,
+          }
+        : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
 
-        setTimeout(() => {
-          let cssObj = node.__threeObj.children[0];
-          cssObj.visible = true;
-        }, "3000")
-      });
+      Graph.cameraPosition(
+      newPos, // new position
+      node, // lookAt ({ x, y, z })
+      3000 // ms transition duration
+      );
 
-      Graph.controls().noZoom = true;
-      Graph.controls().noPan = true;
+      setTimeout(() => {
+      let cssObj = node.__threeObj.children[0];
+      cssObj.visible = true;
+      }, "3000");
+    }
+
+    // move to first node
+    let currNodeInd = -1;
+    const { nodes, links } = Graph.graphData();
+
+    document.onkeydown = checkKey;
+
+    function checkKey(e) {
+
+        e = e || window.event;
+
+        // left arrow
+        if (e.keyCode == '37') {
+
+          if (currNodeInd <= 0) {
+            return;
+          }
+
+          currNodeInd = (currNodeInd - 1);
+
+          move_to_node(nodes[currNodeInd]);
+
+          if (currNodeInd != graphData.nodes.length - 1) {
+            let cssObj = nodes[currNodeInd + 1].__threeObj.children[0];
+            cssObj.visible = false;
+          }
+        }
+        // right arrow
+        else if (e.keyCode == '39') {
+          if (currNodeInd == graphData.nodes.length - 1) {
+            return;
+          }
+
+          currNodeInd = currNodeInd + 1;
+
+          move_to_node(nodes[currNodeInd]);
+
+          if (currNodeInd != 0) {
+            let cssObj = nodes[currNodeInd - 1].__threeObj.children[0];
+            cssObj.visible = false;
+          }
+        }
+    }
   </script>
 </body>
